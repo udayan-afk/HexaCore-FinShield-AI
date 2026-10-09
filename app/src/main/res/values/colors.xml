@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary_navy">#10233F</color>
+    <color name="emerald_green">#16A675</color>
+    <color name="bg_light">#F6F8FB</color>
+    <color name="card_bg">#FFFFFF</color>
+    <color name="border_neutral">#E2E8F0</color>
+</resources>
