@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
+    implementation("com.google.mlkit:text-recognition:16.0.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

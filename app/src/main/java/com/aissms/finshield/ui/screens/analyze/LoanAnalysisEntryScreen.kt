@@ -1,10 +1,12 @@
 package com.aissms.finshield.ui.screens.analyze
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,8 +28,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Lock
@@ -57,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.aissms.finshield.ui.components.FinShieldBottomBar
 import com.aissms.finshield.ui.components.FinShieldScreenTopBar
 import com.aissms.finshield.ui.components.OutlinedFinShieldButton
@@ -64,6 +67,8 @@ import com.aissms.finshield.ui.components.PrimaryFinShieldButton
 import com.aissms.finshield.ui.navigation.Screen
 import com.aissms.finshield.ui.theme.BorderNeutral
 import com.aissms.finshield.ui.theme.EmeraldGreen
+import com.aissms.finshield.ui.theme.IconBoxBlueBg
+import com.aissms.finshield.ui.theme.IconBoxBlueTint
 import com.aissms.finshield.ui.theme.IconBoxGreenBg
 import com.aissms.finshield.ui.theme.IconBoxGreenTint
 import com.aissms.finshield.ui.theme.IconBoxRedBg
@@ -72,12 +77,16 @@ import com.aissms.finshield.ui.theme.PrimaryNavy
 import com.aissms.finshield.ui.theme.SurfaceCard
 import com.aissms.finshield.ui.theme.TextPrimary
 import com.aissms.finshield.ui.theme.TextSecondary
-import kotlinx.coroutines.delay
+import com.aissms.finshield.util.LoanAnalysisData
+import com.aissms.finshield.util.PdfAnalyzer
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoanAnalysisUploadScreen(
-    onNavigateToReport: (String) -> Unit,
+    onNavigateToReportWithData: (LoanAnalysisData) -> Unit,
     onNavigateTo: (String) -> Unit,
     onBackClick: () -> Unit
 ) {
@@ -88,6 +97,54 @@ fun LoanAnalysisUploadScreen(
     var selectedFileName by remember { mutableStateOf("HDFC_Personal_Loan.pdf") }
     var selectedFileSize by remember { mutableStateOf("1.8 MB") }
     var isAnalyzing by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    // Camera Capture Launcher
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        if (bitmap != null) {
+            isAnalyzing = true
+            errorMessage = null
+            try {
+                val image = InputImage.fromBitmap(bitmap, 0)
+                val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+                recognizer.process(image)
+                    .addOnSuccessListener { visionText ->
+                        isAnalyzing = false
+                        val text = visionText.text
+                        if (text.isNotBlank()) {
+                            val analysisData = PdfAnalyzer.analyzeExtractedText(
+                                fileName = "Camera_Scan_${System.currentTimeMillis() / 1000}.jpg",
+                                pageCount = 1,
+                                text = text
+                            )
+                            onNavigateToReportWithData(analysisData)
+                        } else {
+                            errorMessage = "No readable text detected in captured image. Please align agreement document in clear lighting."
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        isAnalyzing = false
+                        errorMessage = "OCR Recognition Failed: ${e.localizedMessage ?: "Unable to read document image"}"
+                    }
+            } catch (e: Exception) {
+                isAnalyzing = false
+                errorMessage = "Failed to initialize camera OCR engine: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    // Permission Launcher for Camera
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            cameraLauncher.launch(null)
+        } else {
+            errorMessage = "Camera permission is required to scan paper loan agreements."
+        }
+    }
 
     // SAF Document Picker for PDF
     val pdfPickerLauncher = rememberLauncherForActivityResult(
@@ -95,6 +152,7 @@ fun LoanAnalysisUploadScreen(
     ) { uri: Uri? ->
         if (uri != null) {
             selectedFileUri = uri
+            errorMessage = null
             context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                 val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
@@ -106,6 +164,15 @@ fun LoanAnalysisUploadScreen(
                     }
                 }
             }
+        }
+    }
+
+    fun launchCameraScan() {
+        val permissionCheck = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+            cameraLauncher.launch(null)
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
@@ -135,10 +202,10 @@ fun LoanAnalysisUploadScreen(
             // Stepper Header (Figma Image 3 & 4)
             AnalysisStepper(currentStep = 1)
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Upload your loan agreement",
+                text = "Analyze your loan agreement",
                 style = MaterialTheme.typography.headlineMedium,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
@@ -146,27 +213,71 @@ fun LoanAnalysisUploadScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "We'll extract key terms, verify repayment figures and flag clauses that deserve your attention.",
+                text = "Choose to upload a digital PDF document or scan a printed paper agreement using your phone camera.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextSecondary,
                 fontSize = 13.sp,
                 textAlign = TextAlign.Center,
-                lineHeight = 19.sp,
+                lineHeight = 18.sp,
                 modifier = Modifier.padding(horizontal = 12.dp)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            if (errorMessage != null) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = IconBoxRedBg
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = IconBoxRedTint,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Notice",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = IconBoxRedTint,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = errorMessage ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextPrimary,
+                                fontSize = 11.5.sp
+                            )
+                        }
+                    }
+                }
+            }
 
             if (selectedFileUri == null && !isAnalyzing) {
-                // Dashed Upload Box (Figma Image 3)
+                // Dashed PDF Upload Card
                 DashedUploadCard(
                     onSelectPdfClick = { pdfPickerLauncher.launch("application/pdf") }
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Camera Scanner Action Card (Task 3)
+                CameraScanCard(
+                    onScanCameraClick = { launchCameraScan() }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -181,7 +292,7 @@ fun LoanAnalysisUploadScreen(
                     Spacer(modifier = Modifier.weight(1f).height(1.dp).background(BorderNeutral))
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Try Sample Agreement Link
                 Row(
@@ -190,6 +301,7 @@ fun LoanAnalysisUploadScreen(
                             selectedFileName = "HDFC_Personal_Loan.pdf"
                             selectedFileSize = "1.8 MB"
                             selectedFileUri = Uri.parse("sample://hdfc")
+                            errorMessage = null
                         }
                         .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -199,40 +311,51 @@ fun LoanAnalysisUploadScreen(
                         style = MaterialTheme.typography.titleMedium,
                         color = EmeraldGreen,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        fontSize = 14.5.sp
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
                         tint = EmeraldGreen,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(15.dp)
                     )
                 }
             } else {
-                // File Selected Card (Figma Image 4)
+                // File Selected Card
                 SelectedFileCard(
                     fileName = selectedFileName,
                     fileSize = selectedFileSize,
                     isAnalyzing = isAnalyzing,
                     onAnalyzeClick = {
                         isAnalyzing = true
+                        errorMessage = null
                         scope.launch {
-                            delay(1800)
+                            val uri = selectedFileUri ?: Uri.parse("sample://hdfc")
+                            val analysisData = PdfAnalyzer.analyzePdfUri(
+                                context = context,
+                                uri = uri,
+                                customFileName = selectedFileName
+                            )
                             isAnalyzing = false
-                            onNavigateToReport(selectedFileName)
+                            if (!analysisData.isSuccess && analysisData.extractedText.isBlank()) {
+                                errorMessage = analysisData.statusMessage
+                            } else {
+                                onNavigateToReportWithData(analysisData)
+                            }
                         }
                     },
                     onChangeFileClick = {
                         selectedFileUri = null
+                        errorMessage = null
                         pdfPickerLauncher.launch("application/pdf")
                     }
                 )
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Privacy Card Box (Figma Image 3 & 4)
+            // Privacy Reassurance Card
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -259,7 +382,7 @@ fun LoanAnalysisUploadScreen(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Your document is encrypted during processing and isn't shared with lenders.",
+                            text = "All PDF text parsing and camera OCR is performed on-device. No document data is shared with external lenders.",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary,
                             fontSize = 12.sp,
@@ -269,7 +392,7 @@ fun LoanAnalysisUploadScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = "FinShield provides independent explanations, not legal or financial advice.",
@@ -347,57 +470,106 @@ private fun DashedUploadCard(onSelectPdfClick: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
+                .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Surface(
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 color = IconBoxGreenBg,
-                modifier = Modifier.size(56.dp)
+                modifier = Modifier.size(50.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Default.FileUpload,
                         contentDescription = null,
                         tint = IconBoxGreenTint,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Select your agreement",
+                text = "Upload PDF document",
                 style = MaterialTheme.typography.titleMedium,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 17.sp
+                fontSize = 16.sp
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
-                text = "Choose a PDF from your device",
+                text = "Choose a digital agreement PDF from your device",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextSecondary,
-                fontSize = 13.sp
+                fontSize = 12.5.sp
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             OutlinedFinShieldButton(
                 text = "Select PDF",
                 onClick = onSelectPdfClick
             )
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(12.dp))
+@Composable
+private fun CameraScanCard(onScanCameraClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onScanCameraClick),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+        border = BorderStroke(1.dp, BorderNeutral)
+    ) {
+        Row(
+            modifier = Modifier.padding(18.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = IconBoxBlueBg,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.CameraAlt,
+                        contentDescription = null,
+                        tint = IconBoxBlueTint,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
 
-            Text(
-                text = "PDF only - Maximum 20 MB",
-                style = MaterialTheme.typography.labelSmall,
-                color = TextSecondary,
-                fontSize = 11.sp
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Scan with Camera",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Capture paper document pages with on-device OCR",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
+            }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+                tint = IconBoxBlueTint,
+                modifier = Modifier.size(18.dp)
             )
         }
     }
@@ -468,7 +640,7 @@ private fun SelectedFileCard(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "12 pages · $fileSize · PDF document",
+                text = "$fileSize · Document ready",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextSecondary,
                 fontSize = 12.sp

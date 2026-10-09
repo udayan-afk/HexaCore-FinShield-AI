@@ -28,7 +28,7 @@ fun FinShieldNavGraph(
     startDestination: String = Screen.Splash.route
 ) {
     var currentLanguage by remember { mutableStateOf(AppLanguage.ENGLISH) }
-    var lastAnalyzedFileName by remember { mutableStateOf("HDFC_Personal_Loan.pdf") }
+    var currentAnalysisData by remember { mutableStateOf<com.aissms.finshield.util.LoanAnalysisData?>(null) }
 
     NavHost(
         navController = navController,
@@ -88,8 +88,8 @@ fun FinShieldNavGraph(
 
         composable(Screen.LoanAnalysisUpload.route) {
             LoanAnalysisUploadScreen(
-                onNavigateToReport = { fileName ->
-                    lastAnalyzedFileName = fileName
+                onNavigateToReportWithData = { data ->
+                    currentAnalysisData = data
                     navController.navigate(Screen.LoanAnalysisReport.route)
                 },
                 onNavigateTo = { route ->
@@ -103,7 +103,7 @@ fun FinShieldNavGraph(
 
         composable(Screen.LoanAnalysisReport.route) {
             LoanReportScreen(
-                fileName = lastAnalyzedFileName,
+                analysisData = currentAnalysisData,
                 onNavigateTo = { route ->
                     navController.navigate(route) {
                         popUpTo(Screen.Dashboard.route)
