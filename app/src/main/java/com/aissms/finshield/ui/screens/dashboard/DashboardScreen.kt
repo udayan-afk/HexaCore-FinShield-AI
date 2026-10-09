@@ -60,7 +60,8 @@ fun DashboardScreen(
         bottomBar = {
             FinShieldBottomBar(
                 currentRoute = Screen.Dashboard.route,
-                onNavigate = onNavigateTo
+                onNavigate = onNavigateTo,
+                currentLanguage = selectedLanguage
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -80,13 +81,14 @@ fun DashboardScreen(
 
             // Primary Featured Hero Card (Figma Reference Image 2)
             HeroAnalyzeCard(
-                onAnalyzeClick = { onNavigateTo(Screen.LoanAnalysisUpload.route) }
+                onAnalyzeClick = { onNavigateTo(Screen.LoanAnalysisUpload.route) },
+                currentLanguage = selectedLanguage
             )
 
             // Quick actions Section
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "Quick actions",
+                    text = com.aissms.finshield.util.tr("quick_actions", selectedLanguage),
                     style = MaterialTheme.typography.titleMedium,
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold,
@@ -100,8 +102,8 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     QuickActionCard(
-                        title = "Loan\nCalculator",
-                        subtitle = "Verify your EMI",
+                        title = com.aissms.finshield.util.tr("calc_title", selectedLanguage),
+                        subtitle = com.aissms.finshield.util.tr("calc_sub", selectedLanguage),
                         icon = Icons.Default.Calculate,
                         iconBgColor = IconBoxGreenBg,
                         iconTintColor = IconBoxGreenTint,
@@ -110,8 +112,8 @@ fun DashboardScreen(
                     )
 
                     QuickActionCard(
-                        title = "Compare\nLoans",
-                        subtitle = "Find better value",
+                        title = com.aissms.finshield.util.tr("compare_title", selectedLanguage),
+                        subtitle = com.aissms.finshield.util.tr("compare_sub", selectedLanguage),
                         icon = Icons.AutoMirrored.Filled.CompareArrows,
                         iconBgColor = IconBoxBlueBg,
                         iconTintColor = IconBoxBlueTint,
@@ -120,8 +122,8 @@ fun DashboardScreen(
                     )
 
                     QuickActionCard(
-                        title = "Credit Score\nGuidance",
-                        subtitle = "Improve profile",
+                        title = com.aissms.finshield.util.tr("credit_title", selectedLanguage),
+                        subtitle = com.aissms.finshield.util.tr("credit_sub", selectedLanguage),
                         icon = Icons.Default.AutoAwesome,
                         iconBgColor = IconBoxAmberBg,
                         iconTintColor = IconBoxAmberTint,
@@ -139,7 +141,7 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Recent analyses",
+                        text = com.aissms.finshield.util.tr("recent_title", selectedLanguage),
                         style = MaterialTheme.typography.titleMedium,
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold,
@@ -147,7 +149,7 @@ fun DashboardScreen(
                     )
 
                     Text(
-                        text = "View all",
+                        text = com.aissms.finshield.util.tr("view_all", selectedLanguage),
                         style = MaterialTheme.typography.labelMedium,
                         color = EmeraldGreen,
                         fontWeight = FontWeight.Bold,

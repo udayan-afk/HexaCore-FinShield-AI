@@ -18,28 +18,31 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.aissms.finshield.model.AppLanguage
 import com.aissms.finshield.ui.navigation.Screen
 import com.aissms.finshield.ui.theme.EmeraldGreen
 import com.aissms.finshield.ui.theme.TextMuted
+import com.aissms.finshield.util.tr
 
 data class BottomNavItem(
     val route: String,
-    val title: String,
+    val key: String,
     val icon: ImageVector
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem(Screen.Dashboard.route, "Home", Icons.Default.Home),
-    BottomNavItem(Screen.LoanAnalysisUpload.route, "Analyze", Icons.Default.Description),
-    BottomNavItem(Screen.LoanComparison.route, "Compare", Icons.AutoMirrored.Filled.CompareArrows),
-    BottomNavItem(Screen.Profile.route, "Profile", Icons.Default.Person)
+    BottomNavItem(Screen.Dashboard.route, "home", Icons.Default.Home),
+    BottomNavItem(Screen.LoanAnalysisUpload.route, "analyze", Icons.Default.Description),
+    BottomNavItem(Screen.LoanComparison.route, "compare", Icons.AutoMirrored.Filled.CompareArrows),
+    BottomNavItem(Screen.Profile.route, "profile", Icons.Default.Person)
 )
 
 @Composable
 fun FinShieldBottomBar(
     currentRoute: String?,
     onNavigate: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentLanguage: AppLanguage = AppLanguage.ENGLISH
 ) {
     NavigationBar(
         modifier = modifier,
@@ -48,27 +51,28 @@ fun FinShieldBottomBar(
     ) {
         bottomNavItems.forEach { item ->
             val isSelected = currentRoute == item.route
+            val localizedTitle = tr(item.key, currentLanguage)
             NavigationBarItem(
                 selected = isSelected,
                 onClick = { onNavigate(item.route) },
                 icon = {
                     Icon(
                         imageVector = item.icon,
-                        contentDescription = item.title,
+                        contentDescription = localizedTitle,
                         tint = if (isSelected) EmeraldGreen else TextMuted
                     )
                 },
                 label = {
                     Text(
-                        text = item.title,
+                        text = localizedTitle,
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 11.sp,
+                        color = if (isSelected) EmeraldGreen else TextMuted,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) EmeraldGreen else TextMuted
+                        fontSize = 11.sp
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = EmeraldGreen.copy(alpha = 0.12f)
+                    indicatorColor = Color.Transparent
                 )
             )
         }

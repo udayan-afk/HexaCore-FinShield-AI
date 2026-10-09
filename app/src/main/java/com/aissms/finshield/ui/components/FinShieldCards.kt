@@ -88,7 +88,8 @@ fun FinShieldCard(
 @Composable
 fun HeroAnalyzeCard(
     onAnalyzeClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentLanguage: com.aissms.finshield.model.AppLanguage = com.aissms.finshield.model.AppLanguage.ENGLISH
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -151,7 +152,7 @@ fun HeroAnalyzeCard(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Analyze your loan agreement",
+                    text = com.aissms.finshield.util.tr("hero_title", currentLanguage),
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
@@ -161,7 +162,7 @@ fun HeroAnalyzeCard(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Upload your PDF to uncover fees, verify EMI calculations and review important clauses.",
+                    text = com.aissms.finshield.util.tr("hero_sub", currentLanguage),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.8f),
                     fontSize = 13.sp,
@@ -171,7 +172,7 @@ fun HeroAnalyzeCard(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 PrimaryFinShieldButton(
-                    text = "Analyze Agreement",
+                    text = com.aissms.finshield.util.tr("hero_btn", currentLanguage),
                     onClick = onAnalyzeClick,
                     showArrow = true,
                     backgroundColor = EmeraldGreen
