@@ -30,9 +30,9 @@ data class BottomNavItem(
 
 val bottomNavItems = listOf(
     BottomNavItem(Screen.Dashboard.route, "Home", Icons.Default.Home),
-    BottomNavItem(Screen.LoanAnalysis.route, "Analyze", Icons.Default.Description),
+    BottomNavItem(Screen.LoanAnalysisUpload.route, "Analyze", Icons.Default.Description),
     BottomNavItem(Screen.LoanComparison.route, "Compare", Icons.AutoMirrored.Filled.CompareArrows),
-    BottomNavItem(Screen.CreditGuidance.route, "Profile", Icons.Default.Person)
+    BottomNavItem(Screen.Profile.route, "Profile", Icons.Default.Person)
 )
 
 @Composable

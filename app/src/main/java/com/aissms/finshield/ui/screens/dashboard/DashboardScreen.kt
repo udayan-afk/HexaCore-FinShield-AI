@@ -80,7 +80,7 @@ fun DashboardScreen(
 
             // Primary Featured Hero Card (Figma Reference Image 2)
             HeroAnalyzeCard(
-                onAnalyzeClick = { onNavigateTo(Screen.LoanAnalysis.route) }
+                onAnalyzeClick = { onNavigateTo(Screen.LoanAnalysisUpload.route) }
             )
 
             // Quick actions Section
@@ -152,7 +152,7 @@ fun DashboardScreen(
                         color = EmeraldGreen,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp,
-                        modifier = Modifier.clickable { onNavigateTo(Screen.LoanAnalysis.route) }
+                        modifier = Modifier.clickable { onNavigateTo(Screen.RecentAnalyses.route) }
                     )
                 }
 
@@ -162,7 +162,7 @@ fun DashboardScreen(
                     fileName = "HDFC_Personal_Loan.pdf",
                     reviewMeta = "Reviewed 18 May · 12 pages",
                     badgeText = "2 to review",
-                    onClick = { onNavigateTo(Screen.LoanAnalysis.route) }
+                    onClick = { onNavigateTo(Screen.LoanAnalysisReport.route) }
                 )
             }
 

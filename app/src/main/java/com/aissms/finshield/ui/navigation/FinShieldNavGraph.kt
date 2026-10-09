@@ -9,7 +9,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.aissms.finshield.model.AppLanguage
-import com.aissms.finshield.ui.screens.analyze.LoanAnalysisEntryScreen
+import com.aissms.finshield.ui.screens.analyze.LoanAnalysisUploadScreen
+import com.aissms.finshield.ui.screens.analyze.LoanReportScreen
 import com.aissms.finshield.ui.screens.auth.AuthScreen
 import com.aissms.finshield.ui.screens.calculator.LoanCalculatorEntryScreen
 import com.aissms.finshield.ui.screens.compare.LoanComparisonEntryScreen
@@ -17,6 +18,8 @@ import com.aissms.finshield.ui.screens.dashboard.DashboardScreen
 import com.aissms.finshield.ui.screens.guidance.CreditScoreGuidanceScreen
 import com.aissms.finshield.ui.screens.language.LanguageSelectionScreen
 import com.aissms.finshield.ui.screens.onboarding.OnboardingScreen
+import com.aissms.finshield.ui.screens.profile.ProfileScreen
+import com.aissms.finshield.ui.screens.recent.RecentAnalysesScreen
 import com.aissms.finshield.ui.screens.splash.SplashScreen
 
 @Composable
@@ -25,6 +28,7 @@ fun FinShieldNavGraph(
     startDestination: String = Screen.Splash.route
 ) {
     var currentLanguage by remember { mutableStateOf(AppLanguage.ENGLISH) }
+    var lastAnalyzedFileName by remember { mutableStateOf("HDFC_Personal_Loan.pdf") }
 
     NavHost(
         navController = navController,
@@ -82,8 +86,24 @@ fun FinShieldNavGraph(
             )
         }
 
-        composable(Screen.LoanAnalysis.route) {
-            LoanAnalysisEntryScreen(
+        composable(Screen.LoanAnalysisUpload.route) {
+            LoanAnalysisUploadScreen(
+                onNavigateToReport = { fileName ->
+                    lastAnalyzedFileName = fileName
+                    navController.navigate(Screen.LoanAnalysisReport.route)
+                },
+                onNavigateTo = { route ->
+                    navController.navigate(route) {
+                        popUpTo(Screen.Dashboard.route)
+                    }
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.LoanAnalysisReport.route) {
+            LoanReportScreen(
+                fileName = lastAnalyzedFileName,
                 onNavigateTo = { route ->
                     navController.navigate(route) {
                         popUpTo(Screen.Dashboard.route)
@@ -117,6 +137,28 @@ fun FinShieldNavGraph(
 
         composable(Screen.CreditGuidance.route) {
             CreditScoreGuidanceScreen(
+                onNavigateTo = { route ->
+                    navController.navigate(route) {
+                        popUpTo(Screen.Dashboard.route)
+                    }
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.RecentAnalyses.route) {
+            RecentAnalysesScreen(
+                onNavigateTo = { route ->
+                    navController.navigate(route) {
+                        popUpTo(Screen.Dashboard.route)
+                    }
+                },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Profile.route) {
+            ProfileScreen(
                 onNavigateTo = { route ->
                     navController.navigate(route) {
                         popUpTo(Screen.Dashboard.route)

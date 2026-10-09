@@ -44,3 +44,4 @@ val IconBoxRedTint = Color(0xFFDC2626)
 
 val BadgeReviewAmberBg = Color(0xFFFEF3C7)
 val BadgeReviewAmberText = Color(0xFFB45309)
+val BadgeReviewAmberBorder = Color(0xFFFCD34D)
