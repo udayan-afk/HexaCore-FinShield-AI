@@ -1,11 +1,10 @@
 package com.aissms.finshield.ui.components
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Calculate
-import androidx.compose.material.icons.filled.CompareArrows
+import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -16,10 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.aissms.finshield.ui.navigation.Screen
 import com.aissms.finshield.ui.theme.EmeraldGreen
-import com.aissms.finshield.ui.theme.PrimaryNavy
 import com.aissms.finshield.ui.theme.TextMuted
 
 data class BottomNavItem(
@@ -31,9 +31,8 @@ data class BottomNavItem(
 val bottomNavItems = listOf(
     BottomNavItem(Screen.Dashboard.route, "Home", Icons.Default.Home),
     BottomNavItem(Screen.LoanAnalysis.route, "Analyze", Icons.Default.Description),
-    BottomNavItem(Screen.LoanCalculator.route, "Calculator", Icons.Default.Calculate),
-    BottomNavItem(Screen.LoanComparison.route, "Compare", Icons.Default.CompareArrows),
-    BottomNavItem(Screen.CreditGuidance.route, "Guidance", Icons.Default.Security)
+    BottomNavItem(Screen.LoanComparison.route, "Compare", Icons.AutoMirrored.Filled.CompareArrows),
+    BottomNavItem(Screen.CreditGuidance.route, "Profile", Icons.Default.Person)
 )
 
 @Composable
@@ -45,7 +44,7 @@ fun FinShieldBottomBar(
     NavigationBar(
         modifier = modifier,
         containerColor = Color.White,
-        tonalElevation = 8.dp
+        tonalElevation = 6.dp
     ) {
         bottomNavItems.forEach { item ->
             val isSelected = currentRoute == item.route
@@ -62,12 +61,14 @@ fun FinShieldBottomBar(
                 label = {
                     Text(
                         text = item.title,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isSelected) PrimaryNavy else TextMuted
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 11.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) EmeraldGreen else TextMuted
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = EmeraldGreen.copy(alpha = 0.15f)
+                    indicatorColor = EmeraldGreen.copy(alpha = 0.12f)
                 )
             )
         }

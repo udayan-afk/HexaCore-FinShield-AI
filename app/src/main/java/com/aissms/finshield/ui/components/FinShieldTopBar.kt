@@ -1,6 +1,7 @@
 package com.aissms.finshield.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,11 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,86 +27,115 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.aissms.finshield.model.AppLanguage
+import androidx.compose.ui.unit.sp
+import com.aissms.finshield.ui.theme.BorderNeutral
 import com.aissms.finshield.ui.theme.EmeraldGreen
+import com.aissms.finshield.ui.theme.IconBoxGreenBg
+import com.aissms.finshield.ui.theme.IconBoxGreenTint
 import com.aissms.finshield.ui.theme.PrimaryNavy
+import com.aissms.finshield.ui.theme.TextPrimary
+import com.aissms.finshield.ui.theme.TextSecondary
 
+/**
+ * Top Header as shown in Figma Image 2
+ */
 @Composable
-fun FinShieldHeader(
-    selectedLanguage: AppLanguage,
-    onLanguageClick: () -> Unit,
+fun DashboardFigmaHeader(
+    userName: String = "Ananya",
+    onNotificationClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = PrimaryNavy,
-        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+        color = Color.Transparent
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 18.dp)
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            Column {
+                Text(
+                    text = "GOOD MORNING",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = EmeraldGreen,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 11.sp,
+                    letterSpacing = 1.sp
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Hi, $userName",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Let's make your next loan clearer.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary,
+                    fontSize = 13.sp
+                )
+            }
+
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        shape = CircleShape,
-                        color = EmeraldGreen,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.Shield,
-                                contentDescription = "FinShield Logo",
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "FinShield AI",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
+                // Notification bell with red badge
+                Surface(
+                    shape = CircleShape,
+                    color = Color.White,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderNeutral),
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clickable { onNotificationClick() }
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = "Notifications",
+                            tint = TextPrimary,
+                            modifier = Modifier.size(20.dp)
                         )
-                        Text(
-                            text = "Loan Transparency Guard",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.White.copy(alpha = 0.8f)
+                        // Notification dot
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .align(Alignment.TopEnd)
+                                .padding(end = 8.dp, top = 8.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEF4444))
                         )
                     }
                 }
 
+                Spacer(modifier = Modifier.width(10.dp))
+
+                // User Initials Avatar
                 Surface(
-                    onClick = onLanguageClick,
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color.White.copy(alpha = 0.15f)
+                    shape = CircleShape,
+                    color = IconBoxGreenBg,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, EmeraldGreen.copy(alpha = 0.3f)),
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clickable { onProfileClick() }
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Language,
-                            contentDescription = "Language",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
+                    Box(contentAlignment = Alignment.Center) {
                         Text(
-                            text = selectedLanguage.displayName,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.White,
-                            fontWeight = FontWeight.SemiBold
+                            text = userName.take(2).uppercase(),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = IconBoxGreenTint,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
                         )
                     }
                 }
